@@ -1,5 +1,5 @@
 #define BASIC_IMPLEMENTATION
-#include "bfi.h"
+#include "bfjit.h"
 
 void usage(const char *prog)
 {
@@ -36,11 +36,13 @@ int main(int argc, char **argv)
      }
 
      if (!errs_empty(&lexer.errors)) {
-          errors_print(&lexer.errors);
+          errs_print(&lexer.errors);
           basic_return_defer(1);
      }
 
-     interpret(&lexer.tokens, memory);
+     for (size_t i = 0; i < lexer.tokens.count; i++) {
+          printf("%4zu: Token('%c', %zu);\n", i, lexer.tokens.items[i].kind, lexer.tokens.items[i].operand);
+     }
 
 defer:
      if (source.items) sb_free(&source);

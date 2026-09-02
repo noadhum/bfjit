@@ -1,4 +1,4 @@
-#include "bfi.h"
+#include "bfjit.h"
 
 #define is_bf_cmd(c) (strchr("><+-.,[]", (c)) != NULL)
 #define is_bf_cmd_mergeable(c) (strchr("><+-", (c)) != NULL)

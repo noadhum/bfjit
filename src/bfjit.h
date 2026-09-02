@@ -53,7 +53,16 @@ typedef struct {
 #define errs_push stack_push
 #define errs_empty stack_empty
 
-void errors_print(const Errors *errors);
+#define errs_print(errors)                                              \
+do {                                                                    \
+     for (size_t i = 0; i < (errors)->count; i++) {                     \
+          fprintf(stderr, "error: %s: %s in line %zu, column %zu\n",    \
+                  (errors)->items[i].filepath,                          \
+                  (errors)->items[i].reason,                            \
+                  (errors)->items[i].line,                              \
+                  (errors)->items[i].col);                              \
+     }                                                                  \
+} while (0)
 
 typedef struct {
      const char *filepath;
@@ -72,7 +81,5 @@ bool lexer_peek(Lexer lexer, Token *token);
 bool lexer_peekn(Lexer lexer, size_t n, Token *token);
 bool lexer_peekn_loc(Lexer lexer, size_t n, Token *token, size_t *pos, size_t *line, size_t *col);
 void lexer_skip_non_bf(Lexer *lexer);
-
-void interpret(Tokens *tokens, unsigned char *memory);
 
 #endif // BFI_H_
