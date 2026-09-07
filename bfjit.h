@@ -376,21 +376,15 @@ void x86_64_generate_code(Tokens *tokens, String_Builder *sb)
           case TOK_PUT: {
                for (size_t i = 0; i < current.operand; i++) {
 #                   ifdef _WIN32
-                         x86_64_emit_push_r64(sb, REG_RCX);                // push rcx
-                         x86_64_emit_sub_val(sb, REG_RSP, 40);             // sub rsp, 40
-                         x86_64_emit_movzx_r64_r8(sb, REG_RCX, REG_CL);    // movzx rcx, cl
-                         x86_64_emit_byte(sb, '\xE8');                     // call
-                         x86_64_emit_i32(sb, &putchar);                    // "putchar"
-                         x86_64_emit_add_val(sb, REG_RSP, 40);             // add rsp, 40
-                         x86_64_emit_pop_r64(sb, REG_RCX);                 // pop rcx
+#                        error "add TOK_PUT for Windows"
 #                   else
-                         x86_64_emit_push_r64(sb, REG_RDI);                // push rdi
-                         x86_64_emit_mov_val(sb, REG_RAX, 1);              // mov rax, 1
-                         x86_64_emit_mov_r64(sb, REG_RSI, REG_RDI);        // mov rsi, rdi
-                         x86_64_emit_mov_val(sb, REG_RDI, 1);              // mov rdi, 1
-                         x86_64_emit_mov_val(sb, REG_RDX, 1);              // mov rdx, 1
-                         x86_64_emit_syscall(sb);                          // syscall
-                         x86_64_emit_pop_r64(sb, REG_RDI);                 // pop rdi
+                         x86_64_emit_push_r64(sb, REG_RDI);                     // push rdi
+                         x86_64_emit_mov_val(sb, REG_RAX, 1);                   // mov rax, 1
+                         x86_64_emit_mov_r64(sb, REG_RSI, REG_RDI);             // mov rsi, rdi
+                         x86_64_emit_mov_val(sb, REG_RDI, 1);                   // mov rdi, 1
+                         x86_64_emit_mov_val(sb, REG_RDX, 1);                   // mov rdx, 1
+                         x86_64_emit_syscall(sb);                               // syscall
+                         x86_64_emit_pop_r64(sb, REG_RDI);                      // pop rdi
 #              endif
                }
           } break;
@@ -398,13 +392,7 @@ void x86_64_generate_code(Tokens *tokens, String_Builder *sb)
           case TOK_GET: {
                for (size_t i = 0; i < current.operand; i++) {
 #                   ifdef _WIN32
-                         x86_64_emit_push_r64(sb, REG_RCX);                // push rcx
-                         x86_64_emit_sub_val(sb, REG_RSP, 40);             // sub rsp, 40
-                         x86_64_emit_byte(sb, '\xE8');                     // call
-                         x86_64_emit_i32(sb, &getchar);                    // "getchar"
-                         x86_64_emit_mov_byte_r8(sb, REG_RCX, REG_AL);     // mov byte[rcx], al
-                         x86_64_emit_add_val(sb, REG_RSP, 40);             // add rsp, 40
-                         x86_64_emit_pop_r64(sb, REG_RCX);                 // pop rcx
+#                        error "add TOK_GET for Windows"
 #                   else
                          x86_64_emit_push_r64(sb, REG_RDI);                // push rdi
                          x86_64_emit_xor_r64(sb, REG_RAX, REG_RAX);        // xor rax, rax

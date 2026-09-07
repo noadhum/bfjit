@@ -3,6 +3,10 @@
 #define BFJIT_IMPLEMENTATION
 #include "bfjit.h"
 
+#ifdef _WIN32
+#    error "bfjit doesnt fully support Windows yet"
+#endif // _WIN32
+
 #ifndef JIT_MEMORY_SIZE
 #define JIT_MEMORY_SIZE 30000
 #endif // JIT_MEMORY_SIZE
