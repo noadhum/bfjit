@@ -15,6 +15,13 @@ typedef enum {
      REG_RDI,
 } x86_64_R64;
 
+typedef enum {
+     REG_AL = 0,
+     REG_CL,
+     REG_DL,
+     REG_BL,
+} x86_64_R8;
+
 // https://en.wikipedia.org/wiki/ModR/M
 typedef enum {
      MOD_MEM = 0,        // 00
@@ -27,6 +34,8 @@ uint8_t x86_64_generate_modrm(ModRM_Mod mod, x86_64_R64 reg, uint8_t reg_or_mem)
 
 #define x86_64_emit_byte sb_append_char
 #define x86_64_emit_byte_many da_append_many
+void x86_64_emit_i32(String_Builder *sb, int32_t val);
+void x86_64_emit_i64(String_Builder *sb, int64_t val);
 
 void x86_64_emit_add_r64(String_Builder *sb, x86_64_R64 a, x86_64_R64 b);            // add a, b
 void x86_64_emit_add_val(String_Builder *sb, x86_64_R64 reg, int val);               // add reg, val
@@ -43,6 +52,9 @@ void x86_64_emit_cmp_byte_val(String_Builder *sb, x86_64_R64 reg, int val);     
 void x86_64_emit_mov_r64(String_Builder *sb, x86_64_R64 a, x86_64_R64 b);            // mov a, b
 void x86_64_emit_mov_val(String_Builder *sb, x86_64_R64 reg, int64_t val);           // mov reg, val
 void x86_64_emit_mov_byte_val(String_Builder *sb, x86_64_R64 reg, int val);          // mov byte[reg], val
+void x86_64_emit_mov_byte_r8(String_Builder *sb, x86_64_R64 r64, x86_64_R8 r8);      // mov byte[r64], r8
+
+void x86_64_emit_movzx_r64_r8(String_Builder *sb, x86_64_R64 r64, x86_64_R8 r8);     // movzx r64, r8
 
 void x86_64_emit_xor_r64(String_Builder *sb, x86_64_R64 a, x86_64_R64 b);            // xor a, b
 
@@ -55,14 +67,32 @@ void x86_64_emit_syscall(String_Builder *sb);                                   
 
 #ifdef X86_64_IMPLEMENTATION
 
+void x86_64_emit_i32(String_Builder *sb, int32_t val)
+{
+     x86_64_emit_byte(sb, (uint8_t)(val >> 0));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 8));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 16));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 24));
+}
+
+void x86_64_emit_i64(String_Builder *sb, int64_t val)
+{
+     x86_64_emit_byte(sb, (uint8_t)(val >> 0));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 8));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 16));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 24));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 32));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 40));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 48));
+     x86_64_emit_byte(sb, (uint8_t)(val >> 56));
+}
+
 uint8_t x86_64_generate_modrm(ModRM_Mod mod, x86_64_R64 reg, uint8_t reg_or_mem)
 {
-     uint8_t modrm;
-
+     uint8_t modrm = 0;
      modrm |= (mod << 6);
      modrm |= (reg_or_mem << 3);
      modrm |= (reg << 0);
-
      return modrm;
 }
 
@@ -89,10 +119,7 @@ void x86_64_emit_add_val(String_Builder *sb, x86_64_R64 reg, int val)
                x86_64_emit_byte(sb, '\xC0' + reg);
           }
 
-          x86_64_emit_byte(sb, (uint8_t)(val >> 0));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 8));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 16));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 24));
+          x86_64_emit_i32(sb, val);
      }
 }
 
@@ -134,10 +161,7 @@ void x86_64_emit_sub_val(String_Builder *sb, x86_64_R64 reg, int val)
                x86_64_emit_byte(sb, '\xE8' + reg);
           }
 
-          x86_64_emit_byte(sb, (uint8_t)(val >> 0));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 8));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 16));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 24));
+          x86_64_emit_i32(sb, val);
      }
 }
 
@@ -180,10 +204,7 @@ void x86_64_emit_cmp_val(String_Builder *sb, x86_64_R64 reg, int val)
                x86_64_emit_byte(sb, '\xF8' + reg);
           }
 
-          x86_64_emit_byte(sb, (uint8_t)(val >> 0));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 8));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 16));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 24));
+          x86_64_emit_i32(sb, val);
      }
 }
 
@@ -213,21 +234,11 @@ void x86_64_emit_mov_val(String_Builder *sb, x86_64_R64 reg, int64_t val)
 {
      if (val >= 0x00 && val <= 0xFFFFFFFF) {
           x86_64_emit_byte(sb, '\xB8' + reg);
-          x86_64_emit_byte(sb, (uint8_t)(val >> 0));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 8));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 16));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 24));
+          x86_64_emit_i32(sb, val);
      } else {
           x86_64_emit_byte(sb, '\x48');
           x86_64_emit_byte(sb, '\xB8' + reg);
-          x86_64_emit_byte(sb, (uint8_t)(val >> 0));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 8));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 16));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 24));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 32));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 40));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 48));
-          x86_64_emit_byte(sb, (uint8_t)(val >> 56));
+          x86_64_emit_i64(sb, val);
      }
 }
 
@@ -244,6 +255,20 @@ void x86_64_emit_mov_byte_val(String_Builder *sb, x86_64_R64 reg, int val)
      }
 
      x86_64_emit_byte(sb, (uint8_t)val);
+}
+
+void x86_64_emit_mov_byte_r8(String_Builder *sb, x86_64_R64 r64, x86_64_R8 r8)
+{
+     x86_64_emit_byte(sb, '\x88');
+     uint8_t modrm = x86_64_generate_modrm(MOD_MEM, r64, r8);
+     x86_64_emit_byte(sb, modrm);
+}
+
+void x86_64_emit_movzx_r64_r8(String_Builder *sb, x86_64_R64 r64, x86_64_R8 r8)
+{
+     x86_64_emit_byte_many(sb, "\x48\x0F\xB6", 3);
+     uint8_t modrm = x86_64_generate_modrm(MOD_REG, r8, r64);
+     x86_64_emit_byte(sb, modrm);
 }
 
 void x86_64_emit_xor_r64(String_Builder *sb, x86_64_R64 a, x86_64_R64 b)

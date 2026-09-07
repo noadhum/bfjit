@@ -1,2 +1,2 @@
-"Hello World!" program [https://en.wikipedia.org/wiki/Brainfuck]
+["Hello World!" program: https://en.wikipedia.org/wiki/Brainfuck]
 ++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
