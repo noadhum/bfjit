@@ -322,17 +322,6 @@ void lexer_tokenize(Lexer *lexer)
      }
 }
 
-typedef struct {
-     size_t operand_addr;
-     int32_t operand;
-} Bracket_Jump;
-
-typedef struct {
-     Bracket_Jump *items;
-     size_t count;
-     size_t capacity;
-} Bracket_Jumps;
-
 #if BFJIT_CPU == BFJIT_CPU_X86_64
 void x86_64_generate_code(Tokens *tokens, String_Builder *sb)
 {

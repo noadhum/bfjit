@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
      clock_t execution_start = clock();
      if (!run_code(&code, memory)) {
-          fprintf(stderr, "error: unable to run code\n", path);
+          fprintf(stderr, "error: unable to run code\n");
           basic_return_defer(1);
      };
      clock_t execution_end = clock();
